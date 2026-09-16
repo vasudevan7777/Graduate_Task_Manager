@@ -1,26 +1,23 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 
 export default function TaskItem({ task }) {
-  const [isUpdating, setIsUpdating] = useState(false);
-
-  const handleStatusChange = async (e) => {
+  const handleStatusChange = (e) => {
     const newStatus = e.target.value;
     if (newStatus === task.status) return;
 
-    setIsUpdating(true);
     try {
       const taskRef = doc(db, 'tasks', task.id);
-      await updateDoc(taskRef, {
+      updateDoc(taskRef, {
         status: newStatus,
         updatedAt: serverTimestamp()
+      }).catch((err) => {
+        console.error('Error updating task status:', err);
+        alert('Failed to update task status. Please try again.');
       });
     } catch (err) {
       console.error('Error updating task status:', err);
-      alert('Failed to update task status. Please try again.');
-    } finally {
-      setIsUpdating(false);
     }
   };
 
@@ -62,10 +59,9 @@ export default function TaskItem({ task }) {
         <select
           value={task.status}
           onChange={handleStatusChange}
-          disabled={isUpdating}
           className={`text-xs font-semibold px-3 py-1.5 rounded-lg border focus:outline-none focus:ring-2 transition-all cursor-pointer ${getStatusBadgeStyle(
             task.status
-          )} ${isUpdating ? 'opacity-50 cursor-wait' : ''}`}
+          )}`}
         >
           <option value="Planned">Planned</option>
           <option value="In Progress">In Progress</option>
